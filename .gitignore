@@ -1,0 +1,9 @@
+node_modules/
+.vercel/
+.env
+.env.*
+.DS_Store
+# Real council data must never be committed
+real/
+data/sandbox/
+*.secret

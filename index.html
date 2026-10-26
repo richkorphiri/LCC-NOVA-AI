@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LCC NOVA AI</title>
+<meta name="description" content="Prototype records and service assistant for Lusaka City Council, built by Team Apex (University of Zambia).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --green:#0f3d1e; --green-2:#14522a; --orange:#f28c1b; --orange-ink:#1a1206;
+  --bg:#0b1511; --panel:#111e18; --panel-2:#16271f; --line:#26392f; --ink:#e9f2ed; --muted:#9db3a7;
+  --digital:#8dbbf0; --digital-bg:#16304d; --physical:#f0be72; --physical-bg:#3d2c0e; --both:#7fd9a2; --both-bg:#123a24; --none:#f0a9a9; --none-bg:#3d1b1b;
+  --font:"Public Sans","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;color-scheme:dark;
+  background-image:radial-gradient(900px 420px at 85% 8%,rgba(242,140,27,.10),transparent 60%),radial-gradient(800px 500px at 0% 40%,rgba(31,122,77,.16),transparent 60%);
+  background-attachment:fixed}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top notice */
+.notice{background:#1b2a22;color:var(--muted);font-size:13px;padding-block:6px;text-align:center}
+.notice strong{color:var(--ink)}
+
+/* header: menu left, crest + wordmark, Search and Login right (GOV.UK layout) */
+header.site{background:var(--green);border-bottom:1px solid #2c6a43;position:sticky;top:0;z-index:30}
+.bar{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:64px;padding-block:8px}
+.burger{width:44px;height:44px;border:0;background:transparent;display:grid;place-content:center;gap:5px;border-radius:8px;flex:none}
+.burger span{display:block;width:24px;height:3px;background:#fff;border-radius:2px}
+.burger:hover{background:rgba(255,255,255,.1)}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;min-width:0;border:0;background:none;padding:0;text-align:left}
+.crest{width:42px;height:42px;border-radius:10px;background:#fff;display:grid;place-items:center;flex:none;overflow:hidden}
+.crest img{width:36px;height:auto;display:block}
+.wordmark{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+.wordmark b{font-weight:800;font-size:19px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
+.wordmark b i{font-style:normal;color:var(--orange)}
+.wordmark small{font-size:12px;color:#c6dccf;font-weight:500;letter-spacing:.04em;margin-top:3px}
+.right{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none}
+.hbtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:#fff;font-weight:600}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+.hbtn svg{width:20px;height:20px;flex:none}
+.hbtn.login{background:var(--orange);color:var(--orange-ink);font-weight:700}
+.hbtn.login:hover{background:#ffa03a}
+@media (max-width:480px){.bar{gap:6px}.wordmark b{font-size:14px;white-space:normal;line-height:1.1}.crest{width:38px;height:38px}.hbtn.login{padding:0 12px}.wordmark small{display:none}.hbtn{padding:0 10px}.hbtn.search span{display:none}.hbtn.search{width:44px;justify-content:center;padding:0}}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40}
+.drawer{position:fixed;left:0;top:0;bottom:0;width:min(86vw,340px);background:#f6f8f6;color:#12251a;z-index:50;padding:18px max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:6px;transform:translateX(-102%);transition:transform .2s}
+.drawer.open{transform:none}
+.drawer h2{margin:0 0 6px;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+.drawer .x{border:0;background:transparent;width:40px;height:40px;font-size:26px;color:#12251a;border-radius:8px}
+.drawer nav a{text-decoration:none;display:block;width:100%;text-align:left;border:0;background:transparent;font-size:18px;font-weight:600;padding:14px 14px;border-radius:10px;color:#12251a}
+.drawer nav a.on,.drawer nav a:hover{background:#dcebe1;color:#0f5a2a}
+.drawer .sub{font-size:13px;color:#4a6355;padding:8px 14px}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+
+main{max-width:1040px;margin:0 auto;padding-block:18px 40px}
+.view{display:none}.view.on{display:block}
+h1.page{font-size:clamp(26px,4.6vw,38px);line-height:1.12;margin:6px 0 4px;letter-spacing:-.01em;font-weight:800}
+.lede{color:var(--muted);margin:0 0 16px;max-width:60ch}
+
+/* chat card (FasoNova style) */
+.chat{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.status{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;border:1px solid #5b3a12;color:var(--orange);background:rgba(242,140,27,.08);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.assist{border:1px solid var(--line);border-radius:18px;padding:12px 16px;background:rgba(0,0,0,.18)}
+.assist b{display:block;font-size:17px}.assist span{color:var(--muted);font-size:14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chip{flex:none;border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:999px;padding:9px 16px;font-size:15px;white-space:nowrap}
+.chip:hover{border-color:var(--orange);color:var(--orange)}
+.msgs{display:flex;flex-direction:column;gap:12px;max-height:min(52vh,520px);overflow-y:auto;padding:2px}
+.msg{min-width:0}
+.msg.user{align-self:flex-end;background:#1f4a35;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:88%;overflow-wrap:anywhere}
+.msg.bot{background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg.bot p{margin:0}.lead{font-weight:700}
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0;font-size:15px}
+dl.facts dt{color:var(--muted)}dl.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.src{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel-2);display:flex;flex-direction:column;gap:4px;min-width:0}
+.card .t{font-weight:700}.meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 12px}
+code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;margin-right:6px}
+.b-Digital{background:var(--digital-bg);color:var(--digital)}.b-Physical{background:var(--physical-bg);color:var(--physical)}
+.b-Both{background:var(--both-bg);color:var(--both)}.b-None{background:var(--none-bg);color:var(--none)}
+.btn{border:0;border-radius:10px;padding:10px 16px;background:var(--orange);color:var(--orange-ink);font-weight:700}
+.btn.alt{background:transparent;color:var(--orange);border:1px solid var(--orange)}
+.ho{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--orange);border-radius:12px;padding:12px}
+.ho input[type=text],input.f,select.f{font:inherit;color:var(--ink);background:#0c1713;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+label.inline{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+
+/* composer */
+.composer{border:1px solid #34503f;border-radius:22px;background:rgba(0,0,0,.28);padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px}
+.composer textarea{width:100%;min-height:58px;max-height:140px;resize:none;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;font-size:17px}
+.composer textarea::placeholder{color:#7f968a}
+.crow{display:flex;align-items:center;gap:8px}
+.ibtn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center}
+.ibtn:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+.ibtn svg{width:22px;height:22px}
+.modepill{font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.send{margin-left:auto;width:50px;height:46px;border:0;border-radius:14px;background:linear-gradient(135deg,#c2410c,var(--orange));color:#fff;display:grid;place-items:center}
+.send svg{width:22px;height:22px}
+.modes{display:none;gap:8px;flex-wrap:wrap}.modes.on{display:flex}
+.modes button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
+.modes button[aria-pressed=true]{background:var(--orange);color:var(--orange-ink);border-color:var(--orange);font-weight:700}
+.disc{text-align:center;color:#82988c;font-size:13px;margin:2px 0 0}
+
+/* panels */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{text-align:left;border:1px solid var(--line);background:var(--panel-2);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.tile:hover{border-color:var(--orange)}.tile b{font-size:17px}.tile span{color:var(--muted);font-size:14px}
+.searchrow{display:flex;gap:8px;flex-wrap:wrap}.searchrow input{flex:1 1 240px}
+.modal{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(0,0,0,.6);padding:16px}
+.modal.on{display:grid}
+.dlg{background:#f6f8f6;color:#12251a;border-radius:18px;padding:22px;width:min(92vw,420px);display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0}.dlg .f{background:#fff;color:#12251a;border-color:#c7d6cc}
+.dlg .note{color:#4a6355}
+.qitem{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel-2);display:flex;flex-direction:column;gap:8px}
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#0c1713;padding:8px;border-radius:8px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding-block:16px;text-align:center}
+@media (prefers-reduced-motion:no-preference){.msg{animation:in .18s ease-out}@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<div class="notice pad" role="note"><strong>Prototype by Team Apex (UNZA)</strong> for the AI for Public Good Challenge. Sample data, not official council advice.</div>
+
+<header class="site pad">
+  <div class="bar">
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+    <button class="brand" id="brand" aria-label="Lusaka City Council NOVA AI, home">
+      <span class="crest"><img src="crest.png" alt="Lusaka City Council coat of arms"></span>
+      <span class="wordmark"><b>Lusaka City <i>Council</i></b><small>NOVA AI</small></span>
+    </button>
+    <div class="right">
+      <button class="hbtn search" id="btnSearch" aria-label="Search records">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span>Search</span>
+      </button>
+      <button class="hbtn login" id="btnLogin">Login</button>
+    </div>
+  </div>
+</header>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Main menu" aria-hidden="true">
+  <h2>Menu <button class="x" id="closeDrawer" aria-label="Close menu">&times;</button></h2>
+  <nav>
+    <a href="#" data-go="home" class="on">Home</a>
+    <a href="#" data-go="services">Services</a>
+    <a href="#" data-go="departments">Departments</a>
+    <a href="#" data-go="help">Help and support</a>
+  </nav>
+  <p class="sub">LCC NOVA AI answers from approved council records only.</p>
+</aside>
+
+<main class="pad">
+  <!-- HOME / CHAT -->
+  <section class="view on" id="v-home">
+    <h1 class="page">Ask about council services and records</h1>
+    <p class="lede">Plain-language answers about Lusaka City Council services, with the source and whether each record is digital, physical or both.</p>
+    <div class="chat">
+      <span class="status"><i></i> Prototype with sample records</span>
+      <div class="assist"><b>Assistant</b><span>Questions about rates, levies, permits and where records are kept.</span></div>
+      <div class="chips" id="chips"></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <form class="composer" id="form">
+        <label for="q" class="label" style="position:absolute;left:-9999px">Your question</label>
+        <textarea id="q" rows="2" maxlength="500" placeholder="Ask about a service or a record. For example: Where is the paper copy of the market stall register?"></textarea>
+        <div class="modes" id="modes" role="group" aria-label="Search mode"></div>
+        <div class="crow">
+          <button type="button" class="ibtn" id="plus" aria-label="Choose search mode" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <span class="modepill" id="modepill">Mode: Auto</span>
+          <button class="send" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button>
+        </div>
+      </form>
+      <div><button class="btn alt" id="vfOpen" type="button" hidden>Ask the AI agent (Voiceflow)</button></div>
+      <p class="disc">NOVA AI answers only from approved LCC records and may not have every record. Prototype, not an official council service.</p>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section class="view" id="v-search">
+    <h1 class="page">Search records</h1>
+    <p class="lede">Four query modes: keyword, subject or topic, citation, and natural language.</p>
+    <div class="panel">
+      <form class="searchrow" id="sform">
+        <label for="sq" class="label" style="position:absolute;left:-9999px">Search</label>
+        <input class="f" id="sq" type="text" placeholder="Search a keyword, subject, citation or question" autocomplete="off">
+        <select class="f" id="smode" aria-label="Search mode" style="width:auto"><option value="auto">Auto-detect</option><option value="keyword">Keyword</option><option value="subject">Subject or topic</option><option value="citation">Citation</option><option value="natural">Natural language</option></select>
+        <button class="btn" type="submit">Search</button>
+      </form>
+      <div class="chips" id="schips"></div>
+      <div id="sresults" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="view" id="v-services">
+    <h1 class="page">Services</h1>
+    <p class="lede">Choose a service to ask about it.</p>
+    <div class="grid" id="serviceGrid"></div>
+  </section>
+
+  <!-- DEPARTMENTS -->
+  <section class="view" id="v-departments">
+    <h1 class="page">Departments</h1>
+    <p class="lede">Records are held by these departments. Choose one to list its records.</p>
+    <div class="grid" id="deptGrid"></div>
+    <div id="deptList" style="margin-top:16px;display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <!-- HELP -->
+  <section class="view" id="v-help">
+    <h1 class="page">Help and support</h1>
+    <div class="panel">
+      <b>What NOVA AI can do</b>
+      <p class="note" style="margin:0">Find services and records, explain what a record is for, show if it is digital, physical or both, and where the paper copy is kept.</p>
+      <b>What it cannot do</b>
+      <p class="note" style="margin:0">See personal accounts or balances, take payments, give legal advice, or waive fees. It will offer to pass your question to a council officer.</p>
+      <b>Need a person?</b>
+      <p class="note" style="margin:0">Use "Pass to a council officer" in the chat. For e-Services portal support: +260 211 428 600 (short code 2008) or info@eservices.gov.zm. Council contact details: To be confirmed with LCC.</p>
+      <b>Your privacy</b>
+      <p class="note" style="margin:0">You do not need to give a name or phone number to ask a question. Contact details are collected only if you choose to leave them for a reply.</p>
+    </div>
+  </section>
+
+  <!-- STAFF QUEUE (demo) -->
+  <section class="view" id="v-staff">
+    <h1 class="page">Staff queue</h1>
+    <p class="lede">Cases passed on by the assistant, with the draft answer and sources attached. Prototype: held in this browser only.</p>
+    <div class="panel">
+      <b>Staff assist</b>
+      <textarea class="f" id="staffq" rows="2" style="width:100%" placeholder="Paste a caller's question to get a sourced answer"></textarea>
+      <div><button class="btn alt" id="staffgo" type="button">Get answer</button></div>
+      <div id="staffans"></div>
+    </div>
+    <div id="queue" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
+  </section>
+</main>
+
+<footer class="pad">LCC NOVA AI &middot; Prototype by Team Apex, University of Zambia &middot; Sample data only</footer>
+
+<div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="lt">
+  <div class="dlg">
+    <h2 id="lt">Log in</h2>
+    <p class="note" style="margin:0">Prototype: sign-in is not connected yet. Staff can open the demo queue below.</p>
+    <label class="label" for="lu" style="color:#4a6355">Staff email</label>
+    <input class="f" id="lu" type="text" placeholder="name@example.com" autocomplete="off">
+    <button class="btn" id="openStaff" type="button">Open staff queue (demo)</button>
+    <button class="btn alt" id="closeLogin" type="button" style="color:#0f5a2a;border-color:#0f5a2a">Close</button>
+  </div>
+</div>
+
+<!-- Voiceflow web chat snippet: paste the exact embed code from Voiceflow > Publish > Web chat here (see README step 4). -->
+
+<script src="data/records.js"></script>
+<script>
+const DATA = window.LCC_DATA || [];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const PORTAL = "https://ecouncils.gsb.gov.zm/services";
+
+/* ---- availability: computed from record fields, never by a model ---- */
+function availability(r) {
+  if (!r) return { status: "Not in approved dataset", cls: "None" };
+  const status = r.dg && r.ph ? "Both" : r.dg ? "Digital" : r.ph ? "Physical" : "Not in approved dataset";
+  return { status, cls: status === "Not in approved dataset" ? "None" : status, location: r.ph ? r.loc : null, owner: r.o };
+}
+const badge = (r) => `<span class="badge b-${availability(r).cls}">${esc(availability(r).status)}</span>`;
+
+/* ---- search: keyword, subject, citation, natural language ---- */
+const STOP = new Set("a an the and or of to in on for with from by at as is are was be do does did can could would should i me my we our you your it its this that these those how what when where who which why please help need want get about info information tell show find apply application requirements require steps process procedure guide record records form paper copy kept".split(" "));
+const SYN = { tax: "rates levy", taxes: "rates levy", rate: "rates", license: "licence", licenses: "licence", shop: "business levy", shops: "business levy", stall: "market", stalls: "market", vendor: "trading", vendors: "trading", restaurant: "health food", food: "health", build: "building", house: "building", land: "development zoning", plot: "development zoning", plan: "building", plans: "building", bylaw: "by-laws", bylaws: "by-laws", minutes: "meetings", meeting: "meetings", excavate: "road works", excavation: "road works", road: "road works", sign: "advertisement", signs: "advertisement", billboard: "advertisement" };
+const stem = (w) => w.replace(/(ies)$/, "y").replace(/(s)$/, "");
+function tokens(s) {
+  const out = [];
+  for (const w of String(s).toLowerCase().replace(/[^a-z0-9\- ]+/g, " ").split(/\s+/)) {
+    if (!w || STOP.has(w)) continue;
+    out.push(stem(w));
+    if (SYN[w]) for (const x of SYN[w].split(" ")) out.push(stem(x));
+  }
+  return [...new Set(out)];
+}
+const norm = (s) => String(s || "").toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const recText = (r) => r.p.map((x) => x.h + " " + x.t).join(" ");
+const IDX = DATA.map((r) => ({ r, title: new Set(tokens(r.t)), subj: new Set(tokens(r.s)), cit: new Set(tokens(r.ci)), dept: new Set(tokens(r.d + " " + r.ty)), body: new Set(tokens(recText(r))) }));
+const DF = {};
+IDX.forEach((x) => new Set([...x.title, ...x.subj, ...x.cit, ...x.dept, ...x.body]).forEach((t) => (DF[t] = (DF[t] || 0) + 1)));
+const idf = (t) => (DF[t] ? Math.max(0, Math.log(DATA.length / DF[t])) : 0.5);
+
+function byNatural(q) {
+  const qt = tokens(q), max = qt.reduce((s, t) => s + idf(t) * 3, 0);
+  if (!qt.length || max === 0) return [];
+  return IDX.map((x) => {
+    let s = 0;
+    for (const t of qt) s += idf(t) * Math.max(x.title.has(t) ? 3 : 0, x.subj.has(t) ? 3 : 0, x.cit.has(t) ? 2 : 0, x.dept.has(t) ? 1 : 0, x.body.has(t) ? 1 : 0);
+    return { r: x.r, score: s / max };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+}
+const byKeyword = (q) => { const k = norm(q); return k ? DATA.filter((r) => norm(r.t + " " + r.s + " " + r.ci + " " + recText(r)).includes(k)).map((r) => ({ r, score: 1 })) : []; };
+function bySubject(q) {
+  const k = norm(q), subs = [...new Set(DATA.map((r) => r.s))];
+  const hit = subs.filter((s) => norm(s) === k || (k && (norm(s).includes(k) || k.includes(norm(s)))));
+  return hit.length ? DATA.filter((r) => hit.includes(r.s)).map((r) => ({ r, score: 1 })) : byNatural(q).filter((x) => x.score >= 0.5);
+}
+function byCitation(q) {
+  const k = norm(q); if (!k) return [];
+  const qt = k.split(" ");
+  return DATA.filter((r) => { if (!r.ci) return false; const ct = norm(r.ci).split(" "); return qt.every((t) => ct.includes(t)) || ct.every((t) => qt.includes(t)); }).map((r) => ({ r, score: 1 }));
+}
+const looksLikeCitation = (q) => /\b(act|no\.?|cap\.?|section)\b.*\d/i.test(q) || /\bof (19|20)\d\d\b/.test(q) || /\b[A-Z]{3}-\d\b/.test(q);
+function detectMode(q) {
+  if (looksLikeCitation(q)) return "citation";
+  const k = norm(q);
+  if (DATA.some((r) => norm(r.s) === k)) return "subject";
+  return k.split(" ").length <= 2 ? "keyword" : "natural";
+}
+function runSearch(q, mode) {
+  const m = !mode || mode === "auto" ? detectMode(q) : mode;
+  return { mode: m, results: { keyword: byKeyword, subject: bySubject, citation: byCitation, natural: byNatural }[m](q) };
+}
+const MODE_NAMES = { auto: "Auto", keyword: "Keyword", subject: "Subject or topic", citation: "Citation", natural: "Natural language" };
+
+/* ---- guardrails ---- */
+const RULES = [
+  { re: /ignore (all |the |your |previous |prior )+(instructions|rules)|system prompt|reveal .*(prompt|instructions)|developer mode|pretend (you|to)|jailbreak/i, say: "I can't do that. I can help you find information about Lusaka City Council services and records, and show where each record is held." },
+  { re: /waive|reduce my (fee|levy|rates)|avoid (paying|fees|the levy)|loophole|bypass|skip (the )?(fee|check)|pay less/i, say: "I can't help with reducing or avoiding fees. I can explain what the approved records say about a service, or pass your question to a council officer.", ho: "sensitive" },
+  { re: /\b(my|his|her|their|someone'?s|another)\b.{0,30}\b(balance|arrears|owe|account|valuation|statement)\b|how much do i owe|check my (rates|levy)/i, say: "I can't see anyone's personal account, balance or case. The official portal or a council officer handles that. I can pass your question to an officer.", ho: "sensitive" },
+  { re: /(process|make|send|do) (a |the |my )?payment|pay (it )?for me|mobile money|payment reference/i, say: "I can't process payments or create payment references. Payments are made through the official council channels. I can pass your question to an officer.", ho: "sensitive" },
+  { re: /legal advice|\bsue\b|lawyer|take .* to court|dispute (the|my)/i, say: "I can't give legal advice or discuss disputes. A council officer can help. I can pass your question to one.", ho: "sensitive" },
+  { re: /(show|give|read|open).{0,20}(complaints log|legal opinions?)/i, say: "That record is restricted and its content is not in the approved dataset. Only an index entry exists. I can pass your request to a council officer.", ho: "sensitive" },
+];
+
+/* ---- answer composition: only from retrieved records ---- */
+const sec = (r, h) => (r.p.find((x) => x.h === h) || {}).t || null;
+function feeParts(r) {
+  const t = sec(r, "Fees and time") || "";
+  const g = (k) => (t.match(new RegExp(k + ":\\s*([^.]+)\\.?")) || [])[1] || "To be confirmed with LCC";
+  return { fee: g("Fee"), time: g("Processing time"), validity: g("Validity") };
+}
+const srcOf = (list) => list.map((r) => ({ code: r.c, title: r.t, citation: r.ci || null, dept: r.d, updated: r.u, dg: r.dg, ph: r.ph, loc: r.ph ? r.loc : null }));
+function answerFor(q, mode) {
+  for (const rule of RULES) if (rule.re.test(q)) return { kind: "refuse", text: rule.say, ho: rule.ho || null, sources: [] };
+  const { mode: m, results } = runSearch(q, mode);
+  const top = results[0];
+  if (!top || (m === "natural" && top.score < 0.3)) return { kind: "none", mode: m, text: "I can't find that in the approved information I have, so I can't confirm it. “Not found” means it is not in the approved dataset, not that it does not exist. I can pass your question to a council officer.", ho: "no_source", sources: [] };
+  if (m === "natural") {
+    const close = results.filter((x) => x.score >= top.score * 0.85), subs = [...new Set(close.map((x) => x.r.s))];
+    if (subs.length > 1 && top.score < 0.7) return { kind: "clarify", mode: m, text: "Which service do you mean?", options: subs.slice(0, 4), sources: [] };
+  }
+  const picked = (m === "natural" ? results.filter((x) => x.score >= top.score * 0.85) : results).slice(0, 4).map((x) => x.r);
+  const lead = picked[0], a = availability(lead), f = feeParts(lead);
+  const where = /where|location|paper|physical|cabinet|shelf|registry|archive|held|kept|stored/i.test(q);
+  let head = `${lead.t}: ${lead.d}. ${({ Both: "Held digitally and on paper.", Digital: "Held digitally only.", Physical: "Held on paper only." })[a.status] || ""}`;
+  if (where && a.location) head = `The paper copy of “${lead.t}” is kept at: ${a.location}.`;
+  else if (where) head = `“${lead.t}” has no paper copy in the approved dataset. It is ${a.status.toLowerCase()} only.`;
+  return {
+    kind: "answer", mode: m, text: head, ho: null,
+    facts: [["Who it is for", sec(lead, "Who this applies to")], ["Fee", lead.dg ? f.fee : null], ["Processing time", lead.dg ? f.time : null], ["Validity", lead.dg ? f.validity : null], ["Legal basis", lead.ci || "None listed in the approved record"], ["Record owner", lead.o]].filter(([, v]) => v),
+    next: lead.dg ? `Read the digital record (${lead.f}) or start on the official portal.` : `Ask at ${a.location || "the owning department"}.`,
+    sources: srcOf(picked),
+  };
+}
+const plain = (a) => [a.text, ...(a.facts || []).map(([k, v]) => `${k}: ${v}`), a.next ? `Next step: ${a.next}` : ""].filter(Boolean).join("\n");
+
+/* ---- rendering ---- */
+const msgs = $("msgs"), queue = [];
+let mode = "auto";
+const srcHtml = (s) => `<div class="card"><div class="t">${esc(s.title)}</div><div>${badge(s)}</div>
+  <div class="meta"><span>${esc(s.dept)}</span><span class="mono">${esc(s.code)}</span><span>Updated ${esc(s.updated)}</span>${s.citation ? `<span>${esc(s.citation)}</span>` : ""}</div>
+  ${s.loc ? `<div class="meta"><span>Paper copy: ${esc(s.loc)}</span></div>` : ""}</div>`;
+function add(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d; }
+function renderAnswer(a) {
+  let h = `<p class="lead">${esc(a.text)}</p>`;
+  if (a.facts) h += `<dl class="facts">${a.facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl><p><strong>Next step:</strong> ${esc(a.next)} <a href="${PORTAL}" target="_blank" rel="noopener" style="color:var(--orange)">Official e-Council services</a></p>`;
+  if (a.kind === "clarify") h += `<div class="chips">${a.options.map((o) => `<button class="chip" data-ask="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  if (a.mode && a.kind === "answer") h += `<p class="note">Search mode used: ${esc(MODE_NAMES[a.mode])}</p>`;
+  if (a.sources.length) h += `<div class="src"><span class="label">Sources</span>${a.sources.map(srcHtml).join("")}</div>`;
+  if (a.ho) h += `<div><button class="btn alt" data-ho="${a.ho}">Pass to a council officer</button></div>`;
+  return h;
+}
+function ask(q) {
+  q = q.trim().slice(0, 500); if (!q) return;
+  show("home");
+  add("user", esc(q));
+  const a = answerFor(q, mode);
+  const b = add("bot", renderAnswer(a)); b._a = a; b.dataset.q = q;
+}
+function openHandover(btn, reason) {
+  if (btn.dataset.done) return;
+  const bubble = btn.closest(".msg"), box = document.createElement("div");
+  box.className = "ho";
+  box.innerHTML = `<strong>Pass this to a council officer</strong><p class="note" style="margin:0">Privacy: leave contact details only if you want a reply. In this prototype nothing is sent anywhere and nothing is kept after you close the page.</p>
+    <label class="inline"><input type="checkbox" class="consent"> I agree to leave contact details for a reply</label>
+    <input type="text" class="contact" placeholder="Phone or email (optional)" disabled aria-label="Contact detail"><div><button class="btn" type="button">Send to staff queue</button></div>`;
+  const cb = box.querySelector(".consent"), ct = box.querySelector(".contact");
+  cb.onchange = () => { ct.disabled = !cb.checked; if (!cb.checked) ct.value = ""; };
+  box.querySelector(".btn").onclick = () => {
+    const a = bubble._a;
+    queue.push({ topic: (a.sources[0] && a.sources[0].title) || "general enquiry", question_summary: bubble.dataset.q.replace(/\b\d{6,}\b/g, "[number removed]"), draft_answer: a.kind === "answer" ? plain(a) : null, sources_checked: a.sources.map((s) => s.code), reason, contact_consent: cb.checked, contact_detail: cb.checked && ct.value.trim() ? ct.value.trim() + " (prototype: not encrypted)" : null, status: "new" });
+    renderQueue();
+    box.innerHTML = `<p style="margin:0"><strong>Passed to the staff queue.</strong> An officer will see your question, the draft answer and the sources checked. No response time is promised in this prototype.</p>`;
+  };
+  btn.dataset.done = "1"; btn.disabled = true; btn.parentElement.after(box);
+}
+function renderQueue() {
+  $("queue").innerHTML = queue.length ? queue.map((h, i) => `<div class="qitem"><div><span class="label">${esc(h.reason.replace(/_/g, " "))}</span> <b>${esc(h.topic)}</b></div><div>${esc(h.question_summary)}</div>
+    ${h.draft_answer ? `<pre>${esc(h.draft_answer)}</pre>` : `<span class="note">No grounded draft answer.</span>`}
+    <div class="meta"><span>Sources checked: ${h.sources_checked.length ? h.sources_checked.map((c) => `<code>${esc(c)}</code>`).join(" ") : "none"}</span></div>
+    ${h.contact_detail ? `<div class="meta"><span>Contact: ${esc(h.contact_detail)}</span></div>` : ""}
+    <label class="note">Status <select class="f" data-q="${i}" style="width:auto"><option ${h.status === "new" ? "selected" : ""}>new</option><option ${h.status === "in progress" ? "selected" : ""}>in progress</option><option ${h.status === "answered" ? "selected" : ""}>answered</option></select></label></div>`).join("") : `<p class="note">No handovers yet. Ask something the assistant cannot find, then choose "Pass to a council officer".</p>`;
+}
+function resultCard(r) {
+  const a = availability(r);
+  return `<div class="card"><div class="t">${esc(r.t)}</div><div>${badge(r)}</div>
+    <div class="meta"><span>${esc(r.d)}</span><span>${esc(r.s)}</span><span>${esc(r.ty)}</span><span class="mono">${esc(r.c)}</span><span>Updated ${esc(r.u)}</span></div>
+    <div class="meta"><span>Owner: ${esc(r.o)}</span>${a.location ? `<span>Paper copy: ${esc(a.location)}</span>` : ""}${r.ci ? `<span>${esc(r.ci)}</span>` : ""}</div></div>`;
+}
+function doSearch(q, m) {
+  q = q.trim(); const out = $("sresults"); if (!q) { out.innerHTML = ""; return; }
+  const { mode: used, results } = runSearch(q, m);
+  const shown = results.filter((x) => used !== "natural" || x.score >= 0.25).slice(0, 12);
+  let h = `<p class="note" style="margin:0">${shown.length} result${shown.length === 1 ? "" : "s"} &middot; ${MODE_NAMES[used]} mode${m === "auto" ? " (auto-detected)" : ""}</p>`;
+  if (!shown.length) h += `<div class="card"><div class="t">Not in the approved dataset</div><div class="meta"><span>Nothing matched. This does not mean the record does not exist.</span></div></div>`;
+  h += shown.map((x) => resultCard(x.r)).join("");
+  if (shown.length) {
+    const subj = shown[0].r.s, same = DATA.filter((r) => r.s === subj);
+    h += `<span class="label">Verified against: all records on “${esc(subj)}” across departments</span><div class="tablewrap"><table><thead><tr><th>Record</th><th>Department</th><th>Availability</th><th>Paper copy</th></tr></thead><tbody>${same.map((r) => `<tr><td>${esc(r.t)}</td><td>${esc(r.d)}</td><td>${badge(r)}</td><td>${esc(r.loc || "—")}</td></tr>`).join("")}</tbody></table></div>`;
+  }
+  out.innerHTML = h;
+}
+
+/* ---- navigation ---- */
+function show(v) {
+  document.querySelectorAll(".view").forEach((x) => x.classList.toggle("on", x.id === "v-" + v));
+  document.querySelectorAll(".drawer nav a").forEach((a) => a.classList.toggle("on", a.dataset.go === v || (v === "home" && a.dataset.go === "home")));
+  closeDrawer(); window.scrollTo({ top: 0 });
+}
+function openDrawer() { $("drawer").classList.add("open"); $("scrim").hidden = false; $("burger").setAttribute("aria-expanded", "true"); $("drawer").setAttribute("aria-hidden", "false"); }
+function closeDrawer() { $("drawer").classList.remove("open"); $("scrim").hidden = true; $("burger").setAttribute("aria-expanded", "false"); $("drawer").setAttribute("aria-hidden", "true"); }
+
+/* ---- wiring ---- */
+const STARTERS = ["Property rates", "Business levy", "Development permit", "Health permit", "Where is the market stall register?", "Rating Act No. 21 of 2018"];
+$("chips").innerHTML = STARTERS.map((s) => `<button class="chip" data-ask="${esc(s)}">${esc(s)}</button>`).join("");
+$("schips").innerHTML = ["property rates", "Rating Act No. 21 of 2018", "market", "Which records show building plans?", "fire certificate"].map((s) => `<button class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join("");
+$("modes").innerHTML = Object.entries(MODE_NAMES).map(([k, v]) => `<button type="button" data-mode="${k}" aria-pressed="${k === "auto"}">${v}</button>`).join("");
+const SUBJECTS = [...new Set(DATA.map((r) => r.s))].sort();
+$("serviceGrid").innerHTML = SUBJECTS.map((s) => `<button class="tile" data-ask="${esc(s)}"><b>${esc(s)}</b><span>${DATA.filter((r) => r.s === s).length} record${DATA.filter((r) => r.s === s).length === 1 ? "" : "s"}</span></button>`).join("");
+const DEPTS = [...new Map(DATA.map((r) => [r.dc, r.d])).entries()];
+$("deptGrid").innerHTML = DEPTS.map(([c, n]) => `<button class="tile" data-dept="${esc(c)}"><b>${esc(n)}</b><span>${DATA.filter((r) => r.dc === c).length} records</span></button>`).join("");
+msgs.innerHTML = "";
+add("bot", `<p class="lead">Hello. I help residents and council staff find information about Lusaka City Council services and the records behind them.</p><p>I only use the approved sample records, and I show where each record is held: digital, physical or both. I can't see personal accounts or take payments. Try one of the suggestions above, or type your own question.</p>`);
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, a"); if (!t) return;
+  if (t.dataset.go) { e.preventDefault(); show(t.dataset.go); }
+  if (t.dataset.ask) { e.preventDefault(); ask(t.dataset.ask); }
+  if (t.dataset.s) { $("sq").value = t.dataset.s; doSearch(t.dataset.s, $("smode").value); }
+  if (t.dataset.ho) openHandover(t, t.dataset.ho);
+  if (t.dataset.mode) { mode = t.dataset.mode; $("modepill").textContent = "Mode: " + MODE_NAMES[mode]; document.querySelectorAll("#modes button").forEach((b) => b.setAttribute("aria-pressed", String(b === t))); }
+  if (t.dataset.dept) {
+    const list = DATA.filter((r) => r.dc === t.dataset.dept);
+    $("deptList").innerHTML = `<span class="label">${esc(list[0].d)}</span>` + list.map(resultCard).join("");
+    $("deptList").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+document.addEventListener("change", (e) => { const s = e.target.closest("select[data-q]"); if (s) queue[+s.dataset.q].status = s.value; });
+$("form").addEventListener("submit", (e) => { e.preventDefault(); const v = $("q").value; $("q").value = ""; ask(v); });
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); } });
+$("plus").addEventListener("click", () => { const on = $("modes").classList.toggle("on"); $("plus").setAttribute("aria-expanded", String(on)); });
+$("sform").addEventListener("submit", (e) => { e.preventDefault(); doSearch($("sq").value, $("smode").value); });
+$("staffgo").addEventListener("click", () => {
+  const q = $("staffq").value.trim(); if (!q) return;
+  const a = answerFor(q, "auto"), b = document.createElement("div");
+  b.className = "msg bot"; b._a = a; b.dataset.q = q; b.innerHTML = renderAnswer(a); $("staffans").replaceChildren(b);
+});
+$("burger").addEventListener("click", openDrawer); $("closeDrawer").addEventListener("click", closeDrawer); $("scrim").addEventListener("click", closeDrawer);
+$("brand").addEventListener("click", () => show("home"));
+$("btnSearch").addEventListener("click", () => { show("search"); setTimeout(() => $("sq").focus(), 50); });
+$("btnLogin").addEventListener("click", () => $("loginModal").classList.add("on"));
+$("closeLogin").addEventListener("click", () => $("loginModal").classList.remove("on"));
+$("openStaff").addEventListener("click", () => { $("loginModal").classList.remove("on"); show("staff"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeDrawer(); $("loginModal").classList.remove("on"); } });
+renderQueue();
+</script>
+<script>
+/* Voiceflow AI agent: paste your Project ID between the quotes. Leave empty to run without it. */
+const VOICEFLOW_PROJECT_ID = "";
+(function () {
+  const btn = document.getElementById("vfOpen");
+  if (!VOICEFLOW_PROJECT_ID) return;
+  btn.hidden = false;
+  const s = document.createElement("script");
+  s.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; s.type = "text/javascript";
+  s.onload = () => window.voiceflow.chat.load({ verify: { projectID: VOICEFLOW_PROJECT_ID }, url: "https://general-runtime.voiceflow.com", voice: { url: "https://runtime-api.voiceflow.com" } });
+  document.head.appendChild(s);
+  btn.addEventListener("click", () => window.voiceflow && window.voiceflow.chat.open());
+})();
+</script>
+</body>
+</html>
